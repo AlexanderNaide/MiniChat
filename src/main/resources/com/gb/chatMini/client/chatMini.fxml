@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="324.0"
+            fx:controller="com.gb.chatMini.client.ChatController"
+            xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+
+      <VBox prefHeight="400.0" prefWidth="324.0">
+            <ListView fx:id="listView" prefHeight="313.0" prefWidth="324.0" />
+            <TextField onAction="#sendMsg" fx:id="input" prefHeight="88.0" prefWidth="324.0" />
+      </VBox>
+
+</AnchorPane>
