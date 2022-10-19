@@ -1,8 +1,6 @@
 package com.gb.chatMini.client;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
@@ -29,6 +27,36 @@ public class IONet {
     public void sendMsg(String msg) throws IOException {
         outputStream.write(msg.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
+    }
+    public void sendFile(File file) throws IOException {
+        try (FileInputStream is = new FileInputStream(file)){
+            int read;
+            outputStream.write("%f%".getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+            //
+
+
+//            outputStream.write((String.format("%05d", file.getName().length())).getBytes(StandardCharsets.UTF_8));
+//            outputStream.flush();
+            outputStream.write((file.getName() + "%n%").getBytes(StandardCharsets.UTF_8));
+//            outputStream.write(file.getName().getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+
+
+            //
+            try{
+                while ((read = is.read(buffer)) != -1){
+                    outputStream.write(buffer, 0, read);
+                    outputStream.flush();
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+//            outputStream.write("%c%".getBytes(StandardCharsets.UTF_8));
+//            outputStream.flush();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private void readMessages() {
