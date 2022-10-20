@@ -1,5 +1,7 @@
 package com.gb.chatMini.server;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -7,7 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 
-public class Handler implements Runnable{
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+public class Handler implements Runnable {
     private boolean running;
     private final byte[] buffer;
     private final InputStream inputStream;
@@ -25,27 +29,27 @@ public class Handler implements Runnable{
     @Override
     public void run() {
         try {
-            while (running){
+            while (running) {
                 int read = inputStream.read(buffer);
                 String message = new String(buffer, 0, read).trim();
-                if (message.equals("%f%")){
+                if (message.equals("%f%")) {
                     Thread wf = new Thread(new writeFile());
                     wf.start();
                     wf.join();
                     System.out.println("The file is saved.");
-                    outputStream.write(("The file is saved." + "\n").getBytes(StandardCharsets.UTF_8));
+                    outputStream.write(("The file is saved." + "\n").getBytes(UTF_8));
                 } else {
                     System.out.println("Received: " + message);
-                    outputStream.write((message + "\n").getBytes(StandardCharsets.UTF_8));
+                    outputStream.write((message + "\n").getBytes(UTF_8));
                 }
-                if (message.equals("quit")){
-                    outputStream.write(("Client disconnected!\n").getBytes(StandardCharsets.UTF_8));
+                if (message.equals("quit")) {
+                    outputStream.write(("Client disconnected!\n").getBytes(UTF_8));
                     close();
                     System.out.println("Client disconnected...");
                     break;
                 }
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -56,55 +60,50 @@ public class Handler implements Runnable{
         socket.close();
     }
 
-    private class writeFile implements Runnable{
+    private class writeFile implements Runnable {
         @Override
         public void run() {
-
             try {
-                int to = inputStream.read(buffer);
-                System.out.println("\n\nbuffer1" + Arrays.toString(buffer));
-                String line = new String(Arrays.copyOfRange(buffer, 0, to), StandardCharsets.UTF_8);
-                System.out.println("line - " + line);
-                int in = line.indexOf("%n%");
-                String name = line.substring(0, in);
-                System.out.println("name - " + name);
+                String name;
+                BufferedOutputStream bos;
+                int r;
+                int nameLength;
+                long fileLight;
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < 4; i++) {
+                    r = inputStream.read();
+                    sb.append((char) r);
+                }
+                nameLength = Integer.parseInt(sb.toString());
+                sb.setLength(0);
+                for (int i = 0; i < 20; i++) {
+                    r = inputStream.read();
+                    sb.append((char) r);
+                }
+                fileLight = Long.parseLong(sb.toString());
+                sb.setLength(0);
+
+                byte[] byteName = new byte[nameLength];
+                for (int i = 0; i < nameLength; i++) {
+                    r = inputStream.read();
+                    byteName[i] = (byte) r;
+                }
+                name = new String(byteName, UTF_8);
                 File file = new File("files/" + name);
-                FileOutputStream fos = new FileOutputStream(file);
-                in += 3;
-                String newLine = line.substring(in);
-                System.out.println("line2 - " + newLine);
-                System.out.println("\n\nbuffer2" + Arrays.toString(buffer));
-                byte[] newBuffer = Arrays.copyOfRange(buffer, 0, in);
-                System.out.println("\n\nbuffer3" + Arrays.toString(newBuffer));
-                System.out.println("name3 - " + new String(newBuffer, 0, newBuffer.length));
-                System.out.println("name2 - " + new String(buffer, 0, in));
+                bos = new BufferedOutputStream(new FileOutputStream(file));
 
-//                System.out.println("новая строка - " + (line.getBytes(StandardCharsets.UTF_8, in, line.length())));
-                fos.write(line.getBytes(StandardCharsets.UTF_8), in, line.length());
+                long readFile = 0;
 
+                while (readFile < fileLight) {
+                    int read = inputStream.read(buffer);
+                    bos.write(buffer, 0, read);
+                    readFile += read;
+                }
+                bos.close();
 
-                do {
-                    to = inputStream.read(buffer);
-                    fos.write(buffer, 0, to);
-//                    in = 0;
-                } while (to == buffer.length);
-                fos.close();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-
-
-
-//            File file = new File("files/copy2.jpg");
-/*            try(FileOutputStream fos = new FileOutputStream(file)){
-                do {
-                    or = inputStream.read(buffer);
-                    fos.write(buffer, 0, or);
-                    System.out.println( "\n тут -> " + new String(buffer, 0, or));
-                } while (or >= buffer.length);
-            } catch (Exception e){
-                e.printStackTrace();
-            }*/
         }
     }
 }

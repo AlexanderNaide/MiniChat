@@ -28,50 +28,49 @@ public class IONet {
         outputStream.write(msg.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
     }
+
     public void sendFile(File file) throws IOException {
-        try (FileInputStream is = new FileInputStream(file)){
+        try (FileInputStream is = new FileInputStream(file)) {
             int read;
             outputStream.write("%f%".getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
-            //
-
-
-//            outputStream.write((String.format("%05d", file.getName().length())).getBytes(StandardCharsets.UTF_8));
-//            outputStream.flush();
-            outputStream.write((file.getName() + "%n%").getBytes(StandardCharsets.UTF_8));
-//            outputStream.write(file.getName().getBytes(StandardCharsets.UTF_8));
+            byte[] byteName = file.getName().getBytes(StandardCharsets.UTF_8);
+            String sbn = (String.format("%04d", byteName.length));
+            outputStream.write(sbn.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
-
-
-            //
-            try{
-                while ((read = is.read(buffer)) != -1){
+            long fileLength = file.length();
+            String sfl = (String.format("%020d", fileLength));
+            outputStream.write(sfl.getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+            outputStream.write(byteName);
+            outputStream.flush();
+            try {
+                while ((read = is.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, read);
                     outputStream.flush();
                 }
-            } catch (Exception e){
+                outputStream.flush();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-//            outputStream.write("%c%".getBytes(StandardCharsets.UTF_8));
-//            outputStream.flush();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void readMessages() {
         try {
-            while (true){
+            while (true) {
                 int read = inputStream.read(buffer);
                 String msg = new String(buffer, 0, read).trim();
                 callback.onReceive(msg);
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void close() throws IOException{
+    public void close() throws IOException {
         outputStream.close();
         inputStream.close();
         socket.close();
