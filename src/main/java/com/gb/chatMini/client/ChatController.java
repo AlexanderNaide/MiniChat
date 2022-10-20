@@ -12,9 +12,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ChatController implements Initializable {
+
+    private Path clienDir;
     public ListView<String> listView;
     public TextField input;
     private IONet net;
@@ -40,9 +50,29 @@ public class ChatController implements Initializable {
         });
     }
 
+    private void initClickListener(){
+        listView.setOnMouseClicked(event -> {
+            if(event.getClickCount() == 2){
+                String item = (String.valueOf(listView.getSelectionModel().getSelectedItems()));
+                input.setText(item);
+            }
+        });
+    }
+
+
+    private void fillFileView() throws IOException {
+        List<String> files = Files.list(clienDir)
+                .map(p -> p.getFileName().toString())
+                .toList();
+        listView.getItems().addAll(files);
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
+            clienDir = Paths.get("client");
+            fillFileView();
+            initClickListener();
             Socket socket = new Socket("localhost", 6830);
             net = new IONet(this::addMessage, socket);
         } catch (IOException e){
