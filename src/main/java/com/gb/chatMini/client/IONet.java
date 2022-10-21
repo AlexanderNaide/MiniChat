@@ -29,7 +29,7 @@ public class IONet {
         outputStream.flush();
     }
 
-    public void sendFile(File file) throws IOException {
+public void sendFile(File file) throws IOException {
         try (FileInputStream is = new FileInputStream(file)) {
             int read;
             outputStream.write("%f%".getBytes(StandardCharsets.UTF_8));

@@ -6,54 +6,46 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-public class ChatController implements Initializable {
+public class NIOChatController implements Initializable {
 
     private Path clienDir;
     public ListView<String> listView;
     public TextField input;
-    private IONet net;
+    private NIONet net;
+    private byte[] buffer;
 
     public void sendMsg(ActionEvent actionEvent) throws IOException {
-        String msg = input.getText();
+        sendFile(input.getText());
         input.clear();
-        if(msg.length() > 4){
-            String prefix = msg.substring(0,4).toLowerCase();
-            if (prefix.equals("file")) {
-                sendFile(msg);
-            } else {
-                sendText(msg);
-            }
-        } else {
-            sendText(msg);
-        }
     }
 
     private void addMessage(String message) {
         Platform.runLater(() -> {
+            input.setText(message);
+        });
+
+
+        /*
+        Platform.runLater(() -> {
             listView.getItems().add(message);
         });
+        */
     }
 
     private void initClickListener(){
         listView.setOnMouseClicked(event -> {
             if(event.getClickCount() == 2){
-                String item = (String.valueOf(listView.getSelectionModel().getSelectedItems()));
+                String item = (String.valueOf(listView.getSelectionModel().getSelectedItem()));
                 input.setText(item);
             }
         });
@@ -70,22 +62,32 @@ public class ChatController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
+            buffer = new byte[8192];
             clienDir = Paths.get("client");
             fillFileView();
             initClickListener();
             Socket socket = new Socket("localhost", 6830);
-            net = new IONet(this::addMessage, socket);
+            net = new NIONet(this::addMessage, socket);
         } catch (IOException e){
             e.printStackTrace();
         }
     }
 
-    public void sendText(String msg) throws IOException {
+    private void sendText(String msg) throws IOException {
         net.sendMsg(msg);
     }
 
-    public void sendFile(String msg) throws IOException {
-        File file = new File(msg.substring(5));
-        net.sendFile(file);
+    private void sendFile (String filename) throws IOException {
+        Path file = clienDir.resolve(filename);
+        net.writeUTF("#file#");
+        net.writeUTF(filename.replaceAll(" ", "_"));
+        net.writeLong(Files.size(file));
+        try(FileInputStream fis = new FileInputStream(file.toFile())){
+            int read = 0;
+
+            while ((read = fis.read(buffer)) != -1){
+                net.writeBytes(buffer, 0, read);
+            }
+        }
     }
 }
