@@ -72,7 +72,8 @@ public class NIOServer {
             }
             buf.clear();
         }
-        processMessage(channel, sb.toString());
+//        processMessage(channel, sb.toString());
+        System.out.println("Client: " + sb);
         // todo processMessage(sb)
         String response = "Hello " + sb + key.attachment();
         channel.write(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
