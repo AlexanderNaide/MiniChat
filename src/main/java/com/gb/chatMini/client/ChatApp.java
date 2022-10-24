@@ -17,6 +17,7 @@ public class ChatApp extends Application {
         Parent parent = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("chatMini.fxml")));
         primaryStage.setScene(new Scene(parent));
         primaryStage.setTitle("MiniChat");
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 }

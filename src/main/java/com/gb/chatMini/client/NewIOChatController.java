@@ -16,12 +16,13 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class NIOChatController implements Initializable {
+public class NewIOChatController implements Initializable {
 
+    public ListView<String> statuses;
     private Path clienDir;
     public ListView<String> listView;
     public TextField input;
-    private NIONet net;
+    private NewIONet net;
     private byte[] buffer;
 
     public void sendMsg(ActionEvent actionEvent) throws IOException {
@@ -29,9 +30,9 @@ public class NIOChatController implements Initializable {
         input.clear();
     }
 
-    private void addMessage(String message) {
+    private void addStatus(String message) {
         Platform.runLater(() -> {
-            input.setText(message);
+            statuses.getItems().add(message);
         });
 
 
@@ -67,7 +68,7 @@ public class NIOChatController implements Initializable {
             fillFileView();
             initClickListener();
             Socket socket = new Socket("localhost", 6830);
-            net = new NIONet(this::addMessage, socket);
+            net = new NewIONet(this::addStatus, socket);
         } catch (IOException e){
             e.printStackTrace();
         }

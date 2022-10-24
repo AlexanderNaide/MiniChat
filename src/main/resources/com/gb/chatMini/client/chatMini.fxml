@@ -5,12 +5,13 @@
 
 <!--fx:controller="com.gb.chatMini.client.IOChatController"-->
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="324.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gb.chatMini.client.NIOChatController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="460.0" prefWidth="324.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gb.chatMini.client.NewIOChatController">
 
-      <VBox prefHeight="400.0" prefWidth="324.0">
+      <VBox prefHeight="460.0" prefWidth="324.0">
             <ListView fx:id="listView" prefHeight="313.0" prefWidth="324.0" />
-      <Label text="Label" />
             <TextField fx:id="input" onAction="#sendMsg" prefHeight="88.0" prefWidth="324.0" />
+      <Label text="Status" />
+      <ListView fx:id="statuses" prefHeight="200.0" prefWidth="200.0" />
       </VBox>
 
 </AnchorPane>

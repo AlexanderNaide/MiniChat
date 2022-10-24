@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class NIOHandler implements Runnable {
+public class NewHandler implements Runnable {
 
     private static final int SIZE = 8192;
     private Path serverDir;
@@ -17,7 +17,7 @@ public class NIOHandler implements Runnable {
     private final DataOutputStream outputStream;
     private final Socket socket;
 
-    public NIOHandler(Socket socket) throws IOException {
+    public NewHandler(Socket socket) throws IOException {
         this.running = true;
         this.socket = socket;
         buffer = new byte[SIZE];
@@ -33,7 +33,7 @@ public class NIOHandler implements Runnable {
 
                 String command = inputStream.readUTF();
                 if(command.equals("quit")){
-                    outputStream.writeUTF("Client disconnected!\n");
+                    outputStream.writeUTF("Client disconnected!");
                     close();
                     System.out.println("Client disconnected...");
                     break;
@@ -42,12 +42,14 @@ public class NIOHandler implements Runnable {
                     long size = inputStream.readLong();
                     try(FileOutputStream fos = new FileOutputStream(
                             serverDir.resolve(fileName).toFile())) {
+                        outputStream.writeUTF("File " + fileName + " created");
                         for (int i = 0; i < (size + SIZE - 1) / SIZE; i++) {
                             int read = inputStream.read(buffer);
                             fos.write(buffer, 0, read);
+                            outputStream.writeUTF("Uploaded " + (i + 1) + " batch");
                         }
                     }
-                    outputStream.writeUTF("File created.");
+                    outputStream.writeUTF("File successfully uploaded.");
                 }
             }
         } catch (Exception e) {

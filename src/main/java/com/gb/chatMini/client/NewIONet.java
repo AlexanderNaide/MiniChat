@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-public class NIONet {
+public class NewIONet {
 
 
     private final Callback callback;
@@ -15,7 +15,7 @@ public class NIONet {
     private final DataOutputStream outputStream;
     private final byte[] buffer;
 
-    public NIONet(Callback callback, Socket socket) throws IOException {
+    public NewIONet(Callback callback, Socket socket) throws IOException {
         this.callback = callback;
         this.socket = socket;
         inputStream = new DataInputStream(socket.getInputStream());
@@ -49,8 +49,7 @@ public class NIONet {
     private void readMessages() {
         try {
             while (true) {
-                int read = inputStream.read(buffer);
-                String msg = new String(buffer, 0, read, StandardCharsets.UTF_8).trim();
+                String msg = inputStream.readUTF();
                 callback.onReceive(msg);
             }
         } catch (Exception e) {
