@@ -33,7 +33,6 @@ public class ConsoleController implements Initializable {
         try {
             buffer = new byte[8192];
             clienDir = Paths.get("client");
-//            Socket socket = new Socket("localhost", 6830);
             net = new NIONet(this::addMessage, 6830);
         } catch (IOException e){
             e.printStackTrace();
