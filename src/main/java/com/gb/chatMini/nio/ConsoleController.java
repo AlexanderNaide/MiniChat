@@ -22,8 +22,10 @@ public class ConsoleController implements Initializable {
     private NIONet net;
 
     public void sendMsg(ActionEvent actionEvent) throws IOException {
-        net.sendMsg(input.getText());
+        String inputMsg = input.getText();
         input.clear();
+        net.sendMsg(inputMsg);
+        addMessage("<<<<< " + inputMsg);
     }
 
     @Override
@@ -31,8 +33,8 @@ public class ConsoleController implements Initializable {
         try {
             buffer = new byte[8192];
             clienDir = Paths.get("client");
-            Socket socket = new Socket("localhost", 6830);
-            net = new NIONet(this::addMessage, socket);
+//            Socket socket = new Socket("localhost", 6830);
+            net = new NIONet(this::addMessage, 6830);
         } catch (IOException e){
             e.printStackTrace();
         }

@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Chat Mini Homework 1" />
+        <module name="ChatMini" />
       </profile>
     </annotationProcessing>
   </component>
