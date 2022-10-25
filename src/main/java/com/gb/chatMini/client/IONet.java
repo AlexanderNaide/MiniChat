@@ -29,7 +29,7 @@ public class IONet {
         outputStream.flush();
     }
 
-    public void sendFile(File file) throws IOException {
+public void sendFile(File file) throws IOException {
         try (FileInputStream is = new FileInputStream(file)) {
             int read;
             outputStream.write("%f%".getBytes(StandardCharsets.UTF_8));
@@ -62,7 +62,7 @@ public class IONet {
         try {
             while (true) {
                 int read = inputStream.read(buffer);
-                String msg = new String(buffer, 0, read).trim();
+                String msg = new String(buffer, 0, read, StandardCharsets.UTF_8).trim();
                 callback.onReceive(msg);
             }
         } catch (Exception e) {

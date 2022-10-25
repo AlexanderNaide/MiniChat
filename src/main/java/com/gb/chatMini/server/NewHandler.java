@@ -1,52 +1,55 @@
 package com.gb.chatMini.server;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.nio.file.Paths;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class Handler implements Runnable {
+public class NewHandler implements Runnable {
+
+    private static final int SIZE = 8192;
+    private Path serverDir;
     private boolean running;
     private final byte[] buffer;
-    private final InputStream inputStream;
-    private final OutputStream outputStream;
+    private final DataInputStream inputStream;
+    private final DataOutputStream outputStream;
     private final Socket socket;
 
-    public Handler(Socket socket) throws IOException {
+    public NewHandler(Socket socket) throws IOException {
         this.running = true;
         this.socket = socket;
-        buffer = new byte[8192];
-        inputStream = socket.getInputStream();
-        outputStream = socket.getOutputStream();
+        buffer = new byte[SIZE];
+        serverDir = Paths.get("server");
+        inputStream = new DataInputStream(socket.getInputStream());
+        outputStream = new DataOutputStream(socket.getOutputStream());
     }
 
     @Override
     public void run() {
         try {
             while (running) {
-                int read = inputStream.read(buffer);
-                String message = new String(buffer, 0, read, UTF_8).trim();
-                if (message.equals("%f%")) {
-                    Thread wf = new Thread(new writeFile());
-                    wf.start();
-                    wf.join();
-                    System.out.println("The file is saved.");
-                    outputStream.write(("The file is saved." + "\n").getBytes(UTF_8));
-                } else {
-                    System.out.println("Received: " + message);
-                    outputStream.write((message + "\n").getBytes(UTF_8));
-                }
-                if (message.equals("quit")) {
-                    outputStream.write(("Client disconnected!\n").getBytes(UTF_8));
+
+                String command = inputStream.readUTF();
+                if(command.equals("quit")){
+                    outputStream.writeUTF("Client disconnected!");
                     close();
                     System.out.println("Client disconnected...");
                     break;
+                } else if (command.equals("#file#")) {
+                    String fileName = inputStream.readUTF();
+                    long size = inputStream.readLong();
+                    try(FileOutputStream fos = new FileOutputStream(
+                            serverDir.resolve(fileName).toFile())) {
+                        outputStream.writeUTF("File " + fileName + " created");
+                        for (int i = 0; i < (size + SIZE - 1) / SIZE; i++) {
+                            int read = inputStream.read(buffer);
+                            fos.write(buffer, 0, read);
+                            outputStream.writeUTF("Uploaded " + (i + 1) + " batch");
+                        }
+                    }
+                    outputStream.writeUTF("File successfully uploaded.");
                 }
             }
         } catch (Exception e) {
