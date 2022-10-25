@@ -11,7 +11,7 @@ public class ServerIo {
             try(ServerSocket serverSocket = new ServerSocket(6830)){
                 Socket socket = serverSocket.accept();
                 System.out.println("Client connected...");
-                new Thread(new Handler(socket)).start();
+                new Thread(new NewHandler(socket)).start();
             } catch (Exception e){
                 e.printStackTrace();
             }
