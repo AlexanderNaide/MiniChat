@@ -56,15 +56,16 @@ public class NIOServer {
         socketChannel.register(selector, SelectionKey.OP_READ, "Hello world!");
     }
 
-    private void handleRead(SelectionKey key)  {
+    private void handleRead(SelectionKey key) throws Exception {
         SocketChannel channel = (SocketChannel) key.channel();
-//        StringBuilder sb = new StringBuilder();
-        String msg = null;
+        StringBuilder msg = new StringBuilder();
+//        String msg = null;
         try {
             while (true){
                 int read = channel.read(buf);
                 if (read == -1){
-                    close(channel);
+//                    close(channel);
+                    channel.close();
                     return;
                 }
                 if (read == 0){
@@ -72,32 +73,42 @@ public class NIOServer {
                 }
                 buf.flip();
 //                buf.position(2);
-                msg = StandardCharsets.UTF_8.decode(buf).toString();
+//                msg = StandardCharsets.UTF_8.decode(buf).toString();
 
-/*                while (buf.hasRemaining()){
-                    sb.append((char) buf.get());
-                }*/
+                while (buf.hasRemaining()){
+                    msg.append((char) buf.get());
+                }
                 buf.clear();
             }
 
-            //        processMessage(channel, sb.toString());
             System.out.println("Client: " + msg);
-            // todo processMessage(sb)
-//            String response = "Hello " + sb + key.attachment();
-//            String response = "Hello " + msg;
-            String response = msg;
-            channel.write(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
-            System.out.println("response: " + response);
+            processMessage(channel, msg.toString().trim());
 
+//            String response = "Hello " + sb + key.attachment();
+            String response = "Hello " + msg;
+//            String response = msg;
+            channel.write(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
+//            System.out.println("response: " + response);
 
         } catch (Exception e){
             System.out.println("Client disconnected...");
             close(channel);
 //            e.printStackTrace();
         }
-
-
     }
+
+    private void processMessage(SocketChannel channel, String msg){
+        String[] tokens = msg.split(" +");
+        TerminalCommandType type;
+        try{
+            type = TerminalCommandType.byCommand(tokens[0]);
+        }catch (RuntimeException e){
+            String response = "Command " + tokens[0] + " is not exist!\n\r";
+            channel.write(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
+        }
+    }
+
+    private void sendString(SocketChannel channel)
 
     private void close(SocketChannel channel){
         try {
@@ -106,10 +117,6 @@ public class NIOServer {
             System.out.println("Client disconnected...");
             e.printStackTrace();
         }
-    }
-
-    private void processMessage(SocketChannel channel, String msg){
-        // TODO
     }
 
     public static void main(String[] args) throws IOException {

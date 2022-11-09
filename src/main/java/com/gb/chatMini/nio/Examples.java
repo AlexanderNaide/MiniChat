@@ -111,7 +111,7 @@ public class Examples {
 
 //        Files.list(Paths.get("server")); // из указанного пути получаем поток файлов, которые там лежат
         List<Path> pathList = Files.list(Paths.get("server")).toList();
-        System.out.println(pathList);
+        System.out.println(pathList + " - Это?");
 
         List<String> data = Files.lines(Paths.get("server/1.txt")).toList(); // lines - возвращает поток строк из файла, toList - собирает поток строк в список строк
         List<String> data2 = Files.lines(Paths.get("server/1.txt"), StandardCharsets.UTF_8).toList(); // lines - возвращает поток строк из файла, toList - собирает поток строк в список строк // тоже с кодировкой
