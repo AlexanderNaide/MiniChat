@@ -8,17 +8,25 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class NIOServer {
     private ServerSocketChannel serverChannel;
     private Selector selector;
     private ByteBuffer buf;
 
+    private Path currentDir;
+
     public NIOServer(int port) throws IOException {
+        currentDir = Paths.get("./");
         buf = ByteBuffer.allocate(8192);
         serverChannel = ServerSocketChannel.open();
         selector = Selector.open();
@@ -54,6 +62,7 @@ public class NIOServer {
         SocketChannel socketChannel = serverChannel.accept();
         socketChannel.configureBlocking(false);
         socketChannel.register(selector, SelectionKey.OP_READ, "Hello world!");
+        socketChannel.write(ByteBuffer.wrap(("Welcome in Mike terminal\n\r" + "Mike -> ").getBytes(StandardCharsets.UTF_8)));
     }
 
     private void handleRead(SelectionKey key) throws Exception {
@@ -97,18 +106,70 @@ public class NIOServer {
         }
     }
 
-    private void processMessage(SocketChannel channel, String msg){
+    private void processMessage(SocketChannel channel, String msg) throws IOException {
         String[] tokens = msg.split(" +");
         TerminalCommandType type;
         try{
             type = TerminalCommandType.byCommand(tokens[0]);
+            switch (type){
+                case LS -> sendString(channel, getFilesList());
+                case CAT -> processCatCommand(channel, tokens);
+                case CD -> processCdCommand(channel, tokens);
+            }
         }catch (RuntimeException e){
             String response = "Command " + tokens[0] + " is not exist!\n\r";
-            channel.write(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
+            sendString(channel, response);
+//            channel.write(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
         }
     }
 
-    private void sendString(SocketChannel channel)
+    private void processCdCommand(SocketChannel channel, String[] tokens) throws IOException {
+        if (tokens == null || tokens.length < 2) {
+            sendString(channel, "Command cat should have 2 args");
+        } else {
+            String dir = tokens[1];
+            if(Files.isDirectory(currentDir.resolve(dir))){
+                currentDir = currentDir.resolve(dir);
+                channel.write(ByteBuffer.wrap("Mike -> ".getBytes(StandardCharsets.UTF_8)));
+            } else {
+                sendString(channel, "You cannot use cd command to FILE\n\r");
+            }
+        }
+    }
+
+    private void processCatCommand(SocketChannel channel, String[] tokens) throws IOException {
+        if (tokens == null || tokens.length < 2) {
+            sendString(channel, "Command cat should have 2 args");
+        } else {
+            String fileName = tokens[1];
+            Path file = currentDir.resolve(fileName);
+            if(!Files.isDirectory(file)) {
+                String content = new String(Files.readAllBytes(file)) + "\n\r";
+                sendString(channel, content);
+            }else{
+                sendString(channel, "You cannot use cat command to DIR\n\r");
+            }
+        }
+    }
+
+    private String getFilesList() throws IOException {
+        return Files.list(currentDir)
+                .map(p -> p.getFileName().toString() + " " + getFileSuffix(p))
+                .collect(Collectors.joining("\n")) + "\n\r";
+    }
+
+    private String getFileSuffix(Path path){
+        if (Files.isDirectory(path)){
+            return "[DIR]";
+        } else {
+            return "[FILE] " + path.toFile().length() + " bytes";
+        }
+    }
+
+    private void sendString(SocketChannel channel, String msg) throws IOException {
+        channel.write(ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8)));
+        channel.write(ByteBuffer.wrap("Mike -> ".getBytes(StandardCharsets.UTF_8)));
+    }
 
     private void close(SocketChannel channel){
         try {
