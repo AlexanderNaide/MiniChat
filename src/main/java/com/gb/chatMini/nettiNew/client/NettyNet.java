@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NettyNet {
 
-
     private SocketChannel channel;
     private OnMessageReceived callback;
 
